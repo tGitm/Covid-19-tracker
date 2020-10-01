@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import './App.css';
 import {
   MenuItem,
@@ -7,15 +7,27 @@ import {
   Card, CardContent
 } from "@material-ui/core";
 import InfoBox from "./InfoBox";
-import Map from "./Map"
+import Map from "./Map";
+import Table from "./Table";
+import {sortData} from "./util";
+import LineGraph from "./LineGraph";
 
 function App() {
   const [countries, setCountries] = useState([]); {/* Empty array */}
   const [country, setCountry] = useState("Worldwide");
   const [countryInfo, setCountryInfo] = useState({});
+  const [tableData, setTableData] = useState([]);
     
     {/* STATE = how to write variable in react */}
     {/* USEEFFECT = runs a piece of code based on given condition */}
+
+    useEffect(() => {
+      fetch("https://disease.sh/v3/covid-19/all")
+      .then((response) => response.json())
+      .then((data) => {
+        setCountryInfo(data);
+      });
+    }, []);
 
     useEffect(() => {
       const getCountriesData = async () => {
@@ -28,7 +40,9 @@ function App() {
               name: country.country,
               value: country.countryInfo.iso2,          
             }));
-  
+            
+            const sortedData = sortData(data);
+            setTableData(sortedData);  //table data za tabelo primerov po vseh državah
             setCountries(countries); //nastavim države
         });
       };
@@ -38,7 +52,7 @@ function App() {
 
     const onCountryChange = async (event) => {  //na klik
       const countryCode = event.target.value;
-      console.log(countryCode);
+      //console.log(countryCode);
       setCountry(countryCode);
 
       const url = countryCode === "Worldwide" ? "https://disease.sh/v3/covid-19/all" : 
@@ -92,10 +106,12 @@ function App() {
 
       <Card className="app_right">
         <CardContent>
-        {/* table */}
-        <h3>Live Cases By Country</h3>
-        {/* graph */}
-        <h3>WorldWide new cases</h3>
+          {/* table */}
+          <h3>Live Cases By Country</h3>
+          <Table countries={tableData} />
+          {/* graph */}
+          <h3>WorldWide new cases</h3>
+          <LineGraph />
         </CardContent>
       </Card>
     </div>
